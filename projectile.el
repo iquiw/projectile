@@ -1207,6 +1207,14 @@ fallback to `shell-command-to-string'."
           (apply 'projectile-call-process-to-string binary-path args)
         (shell-command-to-string command)))))
 
+(defun projectile--shell-command-to-string (command)
+  "Execute shell command COMMAND and return the output as a string.
+It is like `shell-command-to-string', but works on remote and discards
+standard error output."
+  (with-output-to-string
+    (with-current-buffer standard-output
+      (process-file-shell-command command nil '(t nil)))))
+
 (defun projectile-check-vcs-status (&optional PROJECT-PATH)
   "Check the status of the current project.
 If PROJECT-PATH is a project, check this one instead."
@@ -1255,7 +1263,7 @@ Raise an error if their is no dirty project."
 
 (defun projectile-files-via-ext-command (command)
   "Get a list of relative file names in the project root by executing COMMAND."
-  (split-string (shell-command-to-string command) "\0" t))
+  (split-string (projectile--shell-command-to-string command) "\0" t))
 
 (defun projectile-index-directory (directory patterns progress-reporter)
   "Index DIRECTORY taking into account PATTERNS.
@@ -2912,7 +2920,7 @@ Returns a list of expanded filenames."
                         str)))
             (split-string
              (projectile-trim-string
-              (shell-command-to-string cmd))
+              (projectile--shell-command-to-string cmd))
              "\n+"
              t))))
 
